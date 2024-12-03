@@ -1,2 +1,6 @@
+# Ignore kaggle.json
+kaggle.json
+
+# Ignore pyc
 *.pyc
 __pycache__/
