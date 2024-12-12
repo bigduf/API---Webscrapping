@@ -6,7 +6,10 @@ from fastapi import APIRouter, HTTPException
 from kaggle.api.kaggle_api_extended import KaggleApi
 import opendatasets as od
 from sklearn.model_selection import train_test_split
-from src.services.data import load_iris_dataset, process_iris_dataset, split_iris_dataset
+from src.services.data import load_iris_dataset, process_iris_dataset, split_iris_dataset, train_model, predict_with_model
+
+from pydantic import BaseModel
+from typing import List
 
 router = APIRouter()
 
@@ -82,6 +85,21 @@ def train_test_split_iris():
     """
     Charger le dataset Iris, le traiter et le diviser en données d'entraînement et de test.
     """
-    load_iris_dataset()
-    process_iris_dataset()
     return split_iris_dataset()
+
+@router.get("/train-model")
+def train_model_endpoint():
+    """
+    Charger le dataset Iris, le traiter, diviser les données et entraîner un modèle de classification.
+    """
+    return train_model()
+
+class PredictionRequest(BaseModel):
+    data: List[List[float]]  # List of feature vectors for prediction
+
+@router.post("/predict")
+async def predict(request: PredictionRequest):
+    """
+    Endpoint to make predictions using the trained model.
+    """
+    return predict_with_model(request.data)
