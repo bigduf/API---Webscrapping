@@ -3,11 +3,10 @@ import json
 import pandas as pd
 import kaggle
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import JSONResponse
 from kaggle.api.kaggle_api_extended import KaggleApi
 import opendatasets as od
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+from src.services.data import load_iris_dataset, process_iris_dataset, split_iris_dataset
 
 router = APIRouter()
 
@@ -64,56 +63,25 @@ def get_dataset(dataset_key: str):
     return download_kaggle_dataset(dataset_url, DATA_DIR)
 
 @router.get("/load-iris-dataset")
-def load_iris_dataset():
+def load_iris_dataset_endpoint():
     """
     Charger le dataset Iris en tant que DataFrame et le retourner en JSON.
     """
-    iris_file_path = os.path.join(DATA_DIR, "iris/Iris.csv")
-    
-    # Vérifier si le fichier Iris.csv existe
-    if not os.path.exists(iris_file_path):
-        raise HTTPException(status_code=404, detail="Le fichier Iris.csv est introuvable.")
-    
-    # Charger le dataset avec pandas
-    try:
-        iris_df = pd.read_csv(iris_file_path)
-        # Convertir le DataFrame en JSON
-        return JSONResponse(content=iris_df.to_dict(orient="records"))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur lors du chargement du dataset : {e}")
-    
+    return load_iris_dataset()
 
 @router.get("/process-iris-dataset")
-def process_iris_dataset():
-    iris_file_path = os.path.join(DATA_DIR, "iris/Iris.csv")
+def process_iris_dataset_endpoint():
+    """
+    Traiter le dataset Iris et le retourner après avoir effectué des prétraitements.
+    """
+    load_iris_dataset()
+    return process_iris_dataset()
 
-    if not os.path.exists(iris_file_path):
-        raise HTTPException(status_code=404, detail="Le fichier iris.csv est introuvable.")
-
-    try:
-        # Charger le dataset avec pandas
-        iris_df = pd.read_csv(iris_file_path)
-
-        # Vérifier s'il y a des valeurs manquantes
-        if iris_df.isnull().sum().any():
-            iris_df = iris_df.dropna()  # Suppression des lignes avec valeurs manquantes
-            # ou bien, vous pouvez utiliser iris_df.fillna() pour imputer les valeurs manquantes
-
-        # Séparer les features (X) et la cible (y)
-        X = iris_df.drop(columns=["Species"])  # Supposons que 'species' est la colonne cible
-        y = iris_df["Species"]
-
-        # Normaliser les données (Standardisation)
-        scaler = StandardScaler()
-        X_scaled = scaler.fit_transform(X)
-
-        # Retourner les données sous forme de JSON
-        processed_data = {
-            "features": X_scaled.tolist(),
-            "target": y.tolist()
-        }
-
-        return JSONResponse(content=processed_data)
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur lors du traitement du dataset : {e}")
+@router.get("/split-iris-dataset")
+def train_test_split_iris():
+    """
+    Charger le dataset Iris, le traiter et le diviser en données d'entraînement et de test.
+    """
+    load_iris_dataset()
+    process_iris_dataset()
+    return split_iris_dataset()
