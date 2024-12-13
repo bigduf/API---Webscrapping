@@ -6,10 +6,12 @@ from fastapi import APIRouter, HTTPException
 from kaggle.api.kaggle_api_extended import KaggleApi
 import opendatasets as od
 from sklearn.model_selection import train_test_split
-from src.services.data import load_iris_dataset, process_iris_dataset, split_iris_dataset, train_model, predict_with_model
+from src.services.data import *
 
 from pydantic import BaseModel
-from typing import List
+from typing import List, Dict
+
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "src/config/firebase-key.json"
 
 router = APIRouter()
 
@@ -103,3 +105,17 @@ async def predict(request: PredictionRequest):
     Endpoint to make predictions using the trained model.
     """
     return predict_with_model(request.data)
+
+@router.get("/get-parameters-collection")
+def get_parameters_collection():
+    """
+    Create a Firestore collection for model parameters.
+    """
+    return get_parameters()
+
+@router.post("/update-parameters-collection")
+async def update_parameters_collection(data: Dict):
+    """
+    Endpoint pour mettre à jour ou ajouter des paramètres dans une collection Firestore.
+    """
+    return update_parameters(data)

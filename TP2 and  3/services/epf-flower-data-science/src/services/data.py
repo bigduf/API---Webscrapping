@@ -8,6 +8,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
+from google.cloud import firestore
 
 
 DATA_DIR = "src/data"
@@ -193,3 +194,28 @@ def predict_with_model(input_data: list):
     except Exception as e:
         print(f"Error: {str(e)}")  # Affiche l'erreur dans la console pour diagnostic
         raise HTTPException(status_code=500, detail=f"Erreur lors de la prédiction : {str(e)}")
+    
+def get_parameters():
+    try:
+        db = firestore.Client()
+        doc_ref = db.collection("parameters").document("parameters")
+        doc = doc_ref.get()
+
+        if doc.exists:
+            return doc.to_dict()
+        else:
+            raise HTTPException(status_code=404, detail="Parameters not found.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving parameters: {e}")
+
+def update_parameters(data: dict):
+    """
+    Met à jour ou ajoute des paramètres dans la collection 'parameters' de Firestore.
+    """
+    try:
+        db = firestore.Client()
+        doc_ref = db.collection("parameters").document("parameters")
+        doc_ref.set(data, merge=True)  # Fusionner avec les données existantes
+        return {"message": "Paramètres mis à jour avec succès."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de la mise à jour des paramètres : {e}")

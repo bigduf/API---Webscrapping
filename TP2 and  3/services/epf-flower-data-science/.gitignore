@@ -4,3 +4,6 @@ kaggle.json
 # Ignore pyc
 *.pyc
 __pycache__/
+
+# Igonre firebase key
+src/config/firebase-key.json
